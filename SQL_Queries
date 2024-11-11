@@ -1,0 +1,208 @@
+1. Calculate Cost per Vote by Candidate, Year, and State
+This query calculates the cost per vote for each candidate in a given year and state.
+SELECT 
+    c.candidate_id,
+    c.name AS candidate_name,
+    c.party,
+    ca.election_year,
+    s.state_name,
+    ca.total_spent,
+    ca.total_votes,
+    ROUND(ca.total_spent / NULLIF(ca.total_votes, 0), 2) AS cost_per_vote
+FROM 
+    Campaigns ca
+JOIN 
+    Candidates c ON ca.candidate_id = c.candidate_id
+JOIN 
+    States s ON ca.state_id = s.state_id
+WHERE 
+    ca.election_year = 2020; -- Adjust for specific year as needed
+
+2. Compare Cost per Vote Between Parties by Year and State
+This query calculates the difference in cost per vote between Democratic and Republican candidates by state in a specific election year.
+SELECT 
+    d.state_name,
+    d.election_year,
+    ROUND(ABS(d.cost_per_vote - r.cost_per_vote), 2) AS cost_difference
+FROM 
+    (SELECT 
+         s.state_name,
+         ca.election_year,
+         ROUND(ca.total_spent / NULLIF(ca.total_votes, 0), 2) AS cost_per_vote
+     FROM 
+         Campaigns ca
+     JOIN 
+         Candidates c ON ca.candidate_id = c.candidate_id
+     JOIN 
+         States s ON ca.state_id = s.state_id
+     WHERE 
+         c.party = 'Democratic' AND ca.election_year = 2020) d
+JOIN 
+    (SELECT 
+         s.state_name,
+         ca.election_year,
+         ROUND(ca.total_spent / NULLIF(ca.total_votes, 0), 2) AS cost_per_vote
+     FROM 
+         Campaigns ca
+     JOIN 
+         Candidates c ON ca.candidate_id = c.candidate_id
+     JOIN 
+         States s ON ca.state_id = s.state_id
+     WHERE 
+         c.party = 'Republican' AND ca.election_year = 2020) r
+ON 
+    d.state_name = r.state_name AND d.election_year = r.election_year;
+
+
+3. Track Changes in Cost per Vote Over Time in Swing States
+This query analyzes the cost per vote trend in swing states across multiple election cycles.
+SELECT 
+    s.state_name,
+    ca.election_year,
+    ROUND(AVG(ca.total_spent / NULLIF(ca.total_votes, 0)), 2) AS avg_cost_per_vote
+FROM 
+    Campaigns ca
+JOIN 
+    States s ON ca.state_id = s.state_id
+WHERE 
+    s.state_name IN ('Pennsylvania', 'Florida', 'Ohio', 'Michigan', 'Wisconsin') -- Swing states
+GROUP BY 
+    s.state_name, ca.election_year
+ORDER BY 
+    s.state_name, ca.election_year;
+
+4. Calculate Cost per Vote by Spending Category (TV, Digital, Ground)
+This query calculates the cost per vote broken down by type of expenditure (e.g., TV, digital, ground) for a candidate in a specific year and state.
+SELECT 
+    c.name AS candidate_name,
+    ca.election_year,
+    s.state_name,
+    e.type AS expenditure_type,
+    SUM(e.amount) AS total_spent_by_type,
+    ca.total_votes,
+    ROUND(SUM(e.amount) / NULLIF(ca.total_votes, 0), 2) AS cost_per_vote_by_type
+FROM 
+    Expenditures e
+JOIN 
+    Campaigns ca ON e.campaign_id = ca.campaign_id
+JOIN 
+    Candidates c ON ca.candidate_id = c.candidate_id
+JOIN 
+    States s ON ca.state_id = s.state_id
+WHERE 
+    ca.election_year = 2020 -- Adjust as needed
+GROUP BY 
+    c.name, ca.election_year, s.state_name, e.type, ca.total_votes;
+
+
+5. Identify Top 10 States by Cost per Vote
+This query lists the top 10 states with the highest cost per vote in a given election year.
+SELECT 
+    s.state_name,
+    ROUND(SUM(ca.total_spent) / NULLIF(SUM(ca.total_votes), 0), 2) AS cost_per_vote
+FROM 
+    Campaigns ca
+JOIN 
+    States s ON ca.state_id = s.state_id
+WHERE 
+    ca.election_year = 2020 -- Adjust for desired year
+GROUP BY 
+    s.state_name
+ORDER BY 
+    cost_per_vote DESC
+LIMIT 10;
+
+
+6. Top 10 States with Highest ROI (Lowest Cost per Vote)
+This query identifies states with the lowest cost per vote and compares them with swing states.
+SELECT 
+    s.state_name,
+    ROUND(SUM(ca.total_spent) / NULLIF(SUM(ca.total_votes), 0), 2) AS cost_per_vote
+FROM 
+    Campaigns ca
+JOIN 
+    States s ON ca.state_id = s.state_id
+GROUP BY 
+    s.state_name
+ORDER BY 
+    cost_per_vote ASC
+LIMIT 10;
+
+
+7. Analyze Cost per Vote for Winning vs. Losing Candidates
+This query calculates the average cost per vote for winning and losing candidates by election year.
+SELECT 
+    c.election_year,
+    c.name AS candidate_name,
+    c.party,
+    c.won AS election_outcome, -- Assuming 'won' is a boolean indicating if the candidate won
+    ROUND(SUM(ca.total_spent) / NULLIF(SUM(ca.total_votes), 0), 2) AS avg_cost_per_vote
+FROM 
+    Campaigns ca
+JOIN 
+    Candidates c ON ca.candidate_id = c.candidate_id
+GROUP BY 
+    c.election_year, c.name, c.party, c.won
+ORDER BY 
+    c.election_year, avg_cost_per_vote;
+
+
+8. Identify Top 5 Candidates by Total Spending in a Specific Year
+This query lists the top 5 candidates with the highest total campaign spending in a given election year.
+SELECT 
+    c.name AS candidate_name,
+    c.party,
+    ca.election_year,
+    SUM(ca.total_spent) AS total_campaign_spent
+FROM 
+    Campaigns ca
+JOIN 
+    Candidates c ON ca.candidate_id = c.candidate_id
+WHERE 
+    ca.election_year = 2020 -- Adjust for desired year
+GROUP BY 
+    c.name, c.party, ca.election_year
+ORDER BY 
+    total_campaign_spent DESC
+LIMIT 5;
+
+
+
+9. Track Spending Trends in Key Regions (e.g., Northeast, Midwest, etc.)
+This query calculates the average cost per vote in major U.S. regions for a specified year.
+SELECT 
+    CASE 
+        WHEN s.state_name IN ('Maine', 'New York', 'New Jersey', 'Pennsylvania', ...) THEN 'Northeast'
+        WHEN s.state_name IN ('Illinois', 'Ohio', 'Michigan', 'Wisconsin', ...) THEN 'Midwest'
+        WHEN s.state_name IN ('California', 'Oregon', 'Washington', ...) THEN 'West'
+        WHEN s.state_name IN ('Florida', 'Texas', 'Georgia', ...) THEN 'South'
+        ELSE 'Other'
+    END AS region,
+    ca.election_year,
+    ROUND(SUM(ca.total_spent) / NULLIF(SUM(ca.total_votes), 0), 2) AS avg_cost_per_vote
+FROM 
+    Campaigns ca
+JOIN 
+    States s ON ca.state_id = s.state_id
+WHERE 
+    ca.election_year = 2020 -- Adjust for desired year
+GROUP BY 
+    region, ca.election_year
+ORDER BY 
+    avg_cost_per_vote DESC;
+
+
+10. Cost per Vote by Party Over Time
+This query calculates the average cost per vote for each party across multiple election cycles to examine how party spending efficiency has evolved over time.
+SELECT 
+    c.party,
+    ca.election_year,
+    ROUND(SUM(ca.total_spent) / NULLIF(SUM(ca.total_votes), 0), 2) AS avg_cost_per_vote
+FROM 
+    Campaigns ca
+JOIN 
+    Candidates c ON ca.candidate_id = c.candidate_id
+GROUP BY 
+    c.party, ca.election_year
+ORDER BY 
+    ca.election_year, avg_cost_per_vote;
