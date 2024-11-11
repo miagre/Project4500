@@ -1,0 +1,38 @@
+SQL DDL:
+CREATE TABLE Candidates (
+    candidate_id PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    party VARCHAR(50),
+    election_year INT,
+    UNIQUE(name, election_year)
+);
+
+CREATE TABLE Campaigns (
+    campaign_id PRIMARY KEY,
+    candidate_id INT REFERENCES Candidates(candidate_id),
+    state_id INT REFERENCES States(state_id),
+    election_year INT,
+    total_votes INT,
+    total_spent DECIMAL(18, 2),
+    cost_per_vote DECIMAL(18, 2)
+);
+
+CREATE TABLE Expenditures (
+    expenditure_id PRIMARY KEY,
+    campaign_id INT REFERENCES Campaigns(campaign_id),
+    type VARCHAR(50),
+    amount DECIMAL(18, 2)
+);
+
+CREATE TABLE Votes (
+    vote_id PRIMARY KEY,
+    campaign_id INT REFERENCES Campaigns(campaign_id),
+    state_id INT REFERENCES States(state_id),
+    total_votes INT NOT NULL
+);
+
+CREATE TABLE States (
+    state_id PRIMARY KEY,
+    state_name VARCHAR(50),
+    abbreviation CHAR(2) UNIQUE
+);
