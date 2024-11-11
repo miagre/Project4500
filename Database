@@ -1,4 +1,3 @@
-SQL DDL:
 CREATE TABLE Candidates (
     candidate_id PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
