@@ -64,22 +64,49 @@ const popular_vote_by_state = async function(req, res) {
   });
 }
 
+// Gets the top 5 states by contribution sum total
+const top_state_contributions = async function(req, res) {
+  res.json({})
+}
+
+// Gets the party contributions for each state
 const state_contributions_map = async function(req, res) {
   res.json({});
 }
 
+// Gets the contribution sum for one state
+const contributions_by_state = async function(req, res) {
+  res.json({});
+}
+
+// Gets the cities with the highest contributions
+const top_cities = async function(req, res) {
+  res.json({});
+}
+
+// Gets the top 5 contributors in a state
 const contributors_by_state = async function(req, res) {
   res.json({});
 }
 
+// Gets the top 5 employers by sum contributions
 const employer_contributions = async function(req, res) {
+  res.json({});
+}
+
+// Gets the top 5 occupations by sum contributions
+const occupation_contributions = async function(req, res) {
   res.json({});
 }
 
 module.exports = {
   popular_vote_map,
   popular_vote_by_state,
+  top_state_contributions,
   state_contributions_map,
+  contributions_by_state,
+  top_cities,
   contributors_by_state,
   employer_contributions,
+  occupation_contributions
 }
