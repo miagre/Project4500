@@ -12,11 +12,16 @@ app.set('case sensitive routing', true);
 
 // We use express to define our various API endpoints and
 // provide their handlers that we implemented in routes.js
-app.get('/popular_vote_map/', routes.popular_vote_map);
-app.get('/popular_vote_by_state/:state', routes.popular_vote_by_state);
-app.get('/state_contributions_map/', routes.state_contributions_map);
-app.get('/contributors_by_state', routes.contributors_by_state);
-app.get('/employer_contributors', routes.employer_contributions);
+
+// add the routes
+app.get('/popular_vote_map', routes.popular_vote_map);
+app.get('/popular_vote_by_state/:state_name', routes.popular_vote_by_state);
+app.get('/top_state_contributions', routes.top_state_contributions);
+app.get('/state_contributions_map', routes.state_contributions_map);
+app.get('/contributions_by_state/:state', routes.contributions_by_state);
+app.get('/contributors_by_state/:state', routes.contributors_by_state);
+app.get('/employer_contributions', routes.employer_contributions);
+app.get('/occupation_contributions', routes.occupation_contributions);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)

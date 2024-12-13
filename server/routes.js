@@ -18,86 +18,192 @@ const connection = new Pool({
 });
 connection.connect((err) => err && console.log(err));
 
-/******************
- * WARM UP ROUTES *
- ******************/
-
+// Gets a map of all states and the total popular vote each candidate received in each state
 const popular_vote_map = async function(req, res) {
   connection.query(`
     SELECT 
-        s.state_name, 
-        s.state_abbreviation, 
-        es.popular_vote_dem, 
-        es.popular_vote_rep,
-        es.winner
-    FROM election_state_results es 
-    JOIN states s ON es.state_id = s.state_id 
-    WHERE es.year = 2020
+      S.state_name, 
+      C.candidate_name, 
+      C.candidate_party,
+      E.popular_vote
+    FROM 
+      ELECTION_STATE_RESULTS E
+      JOIN STATES S ON E.state_id = S.state_id
+      JOIN CANDIDATES C ON E.candidate_id = C.candidate_id
+    ORDER BY S.state_name, E.popular_vote DESC
   `, (err, data) => {
     if (err) {
       console.log(err);
-      res.json({});
+      res.json([]);
     } else {
       res.json(data.rows);
     }
   });
 }
 
+// Gets the total popular vote for each candidate in a specific state
 const popular_vote_by_state = async function(req, res) {
-  const { state } = req.params;
   connection.query(`
     SELECT 
-        s.state_name,
-        es.popular_vote_dem, 
-        es.popular_vote_rep,
-        es.winner
-    FROM election_state_results es 
-    JOIN states s ON es.state_id = s.state_id 
-    WHERE s.state_name = '${state}'
+      C.candidate_name, 
+      C.candidate_party,
+      E.popular_vote
+    FROM 
+      ELECTION_STATE_RESULTS E
+      JOIN CANDIDATES C ON E.candidate_id = C.candidate_id
+      JOIN STATES S ON E.state_id = S.state_id
+    WHERE S.state_name = '${req.params.state_name}'
+    ORDER BY E.popular_vote DESC
   `, (err, data) => {
     if (err) {
       console.log(err);
-      res.json({});
+      res.json([]);
     } else {
-      res.json(data.rows[0]);
+      res.json(data.rows);
     }
   });
 }
 
-// Gets the top 5 states by contribution sum total
+// Gets the top 5 states by total contributions received
 const top_state_contributions = async function(req, res) {
-  res.json({})
+  connection.query(`
+    SELECT 
+      S.state_name, 
+      SUM(C.amount) AS total_contributions
+    FROM 
+      CONTRIBUTIONS C
+      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
+      JOIN STATES S ON CO.state_id = S.state_id
+    GROUP BY S.state_name
+    ORDER BY total_contributions DESC
+    LIMIT 5
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
 }
 
 // Gets the party contributions for each state
 const state_contributions_map = async function(req, res) {
-  res.json({});
+  connection.query(`
+    SELECT 
+      S.state_name, 
+      CA.candidate_party, 
+      SUM(C.amount) AS total_contributions
+    FROM 
+      CONTRIBUTIONS C
+      JOIN CANDIDATES CA ON C.candidate_id = CA.candidate_id
+      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
+      JOIN STATES S ON CO.state_id = S.state_id
+    GROUP BY S.state_name, CA.candidate_party
+    ORDER BY S.state_name, total_contributions DESC
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
 }
 
-// Gets the contribution sum for one state
+// Gets the contribution sum for a specific state
 const contributions_by_state = async function(req, res) {
-  res.json({});
+  connection.query(`
+    SELECT 
+      S.state_name, 
+      SUM(C.amount) AS total_contributions
+    FROM 
+      CONTRIBUTIONS C
+      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
+      JOIN STATES S ON CO.state_id = S.state_id
+    WHERE S.state_name = '${req.params.state_name}'
+    GROUP BY S.state_name
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
 }
 
-// Gets the cities with the highest contributions
-const top_cities = async function(req, res) {
-  res.json({});
-}
-
-// Gets the top 5 contributors in a state
+// Gets the top 5 contributors in a state by total contribution amount
 const contributors_by_state = async function(req, res) {
-  res.json({});
+  connection.query(`
+    SELECT 
+      CO.first_name, 
+      CO.last_name, 
+      SUM(C.amount) AS total_contributions
+    FROM 
+      CONTRIBUTIONS C
+      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
+      JOIN STATES S ON CO.state_id = S.state_id
+    WHERE S.state_name = '${req.params.state_name}'
+    GROUP BY CO.first_name, CO.last_name
+    ORDER BY total_contributions DESC
+    LIMIT 5
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
 }
 
-// Gets the top 5 employers by sum contributions
+// Gets the top 5 employers by total contribution amount
 const employer_contributions = async function(req, res) {
-  res.json({});
+  connection.query(`
+    SELECT 
+      CO.employer, 
+      SUM(C.amount) AS total_contributions
+    FROM 
+      CONTRIBUTIONS C
+      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
+    GROUP BY CO.employer
+    ORDER BY total_contributions DESC
+    LIMIT 5
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
 }
 
-// Gets the top 5 occupations by sum contributions
+// Gets the top 5 occupations by total contribution amount
 const occupation_contributions = async function(req, res) {
-  res.json({});
+  connection.query(`
+    SELECT 
+      CO.occupation, 
+      SUM(C.amount) AS total_contributions
+    FROM 
+      CONTRIBUTIONS C
+      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
+    GROUP BY CO.occupation
+    ORDER BY total_contributions DESC
+    LIMIT 5
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
 }
+
+
+
 
 module.exports = {
   popular_vote_map,
@@ -105,7 +211,6 @@ module.exports = {
   top_state_contributions,
   state_contributions_map,
   contributions_by_state,
-  top_cities,
   contributors_by_state,
   employer_contributions,
   occupation_contributions
