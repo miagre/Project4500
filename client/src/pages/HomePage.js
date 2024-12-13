@@ -1,75 +1,121 @@
-import { useEffect, useState } from 'react';
-import { Container, Divider, Link } from '@mui/material';
-import { NavLink } from 'react-router-dom';
+import { useEffect } from "react";
+import { Container } from "@mui/material";
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  Marker,
+  Annotation,
+} from "react-simple-maps";
+import { scaleQuantile } from "d3-scale";
 
-import LazyTable from '../components/LazyTable';
-import SongCard from '../components/SongCard';
-const config = require('../config.json');
+const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
+
+const stateLabels = [
+  { name: "AL", coordinates: [-86.9023, 32.3182] },
+  { name: "AK", coordinates: [-153.3694, 63.3883] },
+  { name: "AZ", coordinates: [-111.0937, 34.0489] },
+  { name: "AR", coordinates: [-92.3809, 34.9697] },
+  { name: "CA", coordinates: [-119.4179, 36.7783] },
+  { name: "CO", coordinates: [-105.7821, 39.5501] },
+  { name: "CT", coordinates: [-72.7273, 41.6032] },
+  { name: "DE", coordinates: [-75.5277, 39.3185] },
+  { name: "FL", coordinates: [-81.5158, 27.6648] },
+  { name: "GA", coordinates: [-83.6487, 32.1656] },
+  { name: "HI", coordinates: [-157.5311, 21.0945] },
+  { name: "ID", coordinates: [-114.742, 44.2405] },
+  { name: "IL", coordinates: [-89.3985, 40.6331] },
+  { name: "IN", coordinates: [-86.2816, 39.8494] },
+  { name: "IA", coordinates: [-93.214, 42.0329] },
+  { name: "KS", coordinates: [-98.3804, 38.5266] },
+  { name: "KY", coordinates: [-84.27, 37.6681] },
+  { name: "LA", coordinates: [-91.9623, 31.1695] },
+  { name: "ME", coordinates: [-69.3977, 44.6939] },
+  { name: "MD", coordinates: [-76.6413, 39.0458] },
+  { name: "MA", coordinates: [-71.5314, 42.2373] },
+  { name: "MI", coordinates: [-85.6024, 44.3148] },
+  { name: "MN", coordinates: [-93.9196, 45.6945] },
+  { name: "MS", coordinates: [-89.3985, 32.7416] },
+  { name: "MO", coordinates: [-92.458, 38.4561] },
+  { name: "MT", coordinates: [-110.3626, 46.9219] },
+  { name: "NE", coordinates: [-99.9018, 41.4925] },
+  { name: "NV", coordinates: [-117.0554, 38.8026] },
+  { name: "NH", coordinates: [-71.5724, 43.1939] },
+  { name: "NJ", coordinates: [-74.5089, 40.0583] },
+  { name: "NM", coordinates: [-106.2371, 34.5199] },
+  { name: "NY", coordinates: [-75.4452, 42.9538] },
+  { name: "NC", coordinates: [-79.0193, 35.7596] },
+  { name: "ND", coordinates: [-100.4793, 47.5515] },
+  { name: "OH", coordinates: [-82.7937, 40.4173] },
+  { name: "OK", coordinates: [-97.5164, 35.5851] },
+  { name: "OR", coordinates: [-120.5542, 44.1419] },
+  { name: "PA", coordinates: [-77.8446, 40.8721] },
+  { name: "RI", coordinates: [-71.5314, 41.6762] },
+  { name: "SC", coordinates: [-80.9066, 33.8569] },
+  { name: "SD", coordinates: [-100.2263, 44.2998] },
+  { name: "TN", coordinates: [-86.7489, 35.7478] },
+  { name: "TX", coordinates: [-99.9018, 31.9686] },
+  { name: "UT", coordinates: [-111.891, 40.1135] },
+  { name: "VT", coordinates: [-72.7273, 44.0459] },
+  { name: "VA", coordinates: [-78.6569, 37.4316] },
+  { name: "WA", coordinates: [-120.7401, 47.7511] },
+  { name: "WV", coordinates: [-80.9543, 38.5976] },
+  { name: "WI", coordinates: [-89.6385, 44.2563] },
+  { name: "WY", coordinates: [-107.2085, 42.7475] },
+];
 
 export default function HomePage() {
-  // We use the setState hook to persist information across renders (such as the result of our API calls)
-  const [songOfTheDay, setSongOfTheDay] = useState({});
-  // TODO (TASK 13): add a state variable to store the app author (default to '')
-
-  const [selectedSongId, setSelectedSongId] = useState(null);
-
-  // The useEffect hook by default runs the provided callback after every render
-  // The second (optional) argument, [], is the dependency array which signals
-  // to the hook to only run the provided callback if the value of the dependency array
-  // changes from the previous render. In this case, an empty array means the callback
-  // will only run on the very first render.
-  useEffect(() => {
-    // Fetch request to get the song of the day. Fetch runs asynchronously.
-    // The .then() method is called when the fetch request is complete
-    // and proceeds to convert the result to a JSON which is finally placed in state.
-    fetch(`http://${config.server_host}:${config.server_port}/random`)
-      .then(res => res.json())
-      .then(resJson => setSongOfTheDay(resJson));
-
-    // TODO (TASK 14): add a fetch call to get the app author (name not pennkey) and store the name field in the state variable
-  }, []);
-
-  // Here, we define the columns of the "Top Songs" table. The songColumns variable is an array (in order)
-  // of objects with each object representing a column. Each object has a "field" property representing
-  // what data field to display from the raw data, "headerName" property representing the column label,
-  // and an optional renderCell property which given a row returns a custom JSX element to display in the cell.
-  const songColumns = [
-    {
-      field: 'title',
-      headerName: 'Song Title',
-      renderCell: (row) => <Link onClick={() => setSelectedSongId(row.song_id)}>{row.title}</Link> // A Link component is used just for formatting purposes
-    },
-    {
-      field: 'album',
-      headerName: 'Album Title',
-      renderCell: (row) => <NavLink to={`/albums/${row.album_id}`}>{row.album}</NavLink> // A NavLink component is used to create a link to the album page
-    },
-    {
-      field: 'plays',
-      headerName: 'Plays'
-    },
-  ];
-
-  // TODO (TASK 15): define the columns for the top albums (schema is Album Title, Plays), where Album Title is a link to the album page
-  // Hint: this should be very similar to songColumns defined above, but has 2 columns instead of 3
-  // Hint: recall the schema for an album is different from that of a song (see the API docs for /top_albums). How does that impact the "field" parameter and the "renderCell" function for the album title column?
-  const albumColumns = [
-
-  ]
-
   return (
-    <Container>
-      {/* SongCard is a custom component that we made. selectedSongId && <SongCard .../> makes use of short-circuit logic to only render the SongCard if a non-null song is selected */}
-      {selectedSongId && <SongCard songId={selectedSongId} handleClose={() => setSelectedSongId(null)} />}
-      <h2>Check out your song of the day:&nbsp;
-        <Link onClick={() => setSelectedSongId(songOfTheDay.song_id)}>{songOfTheDay.title}</Link>
-      </h2>
-      <Divider />
-      <h2>Top Songs</h2>
-      <LazyTable route={`http://${config.server_host}:${config.server_port}/top_songs`} columns={songColumns} />
-      <Divider />
-      {/* TODO (TASK 16): add a h2 heading, LazyTable, and divider for top albums. Set the LazyTable's props for defaultPageSize to 5 and rowsPerPageOptions to [5, 10] */}
-      {/* TODO (TASK 17): add a paragraph (<p></p>) that displays “Created by [name]” using the name state stored from TASK 13/TASK 14 */}
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <ComposableMap projection="geoAlbersUsa">
+        <Geographies geography={geoUrl}>
+          {({ geographies }) =>
+            geographies.map((geo) => (
+              <Geography
+                key={geo.rsmKey}
+                geography={geo}
+                fill="#DDD"
+                stroke="#FFF"
+                style={{
+                  default: {
+                    fill: "#DDD",
+                    outline: "none",
+                  },
+                  hover: {
+                    fill: "#AAA",
+                    outline: "none",
+                  },
+                  pressed: {
+                    fill: "#888",
+                    outline: "none",
+                  },
+                }}
+              />
+            ))
+          }
+        </Geographies>
+        {/* Add state labels */}
+        {stateLabels.map(({ name, coordinates }) => (
+          <Annotation
+            key={name}
+            subject={coordinates}
+            dx={0}
+            dy={0}
+            connectorProps={{}}
+          >
+            <text
+              x={4}
+              y={4}
+              fontSize={10}
+              textAnchor="middle"
+              alignmentBaseline="middle"
+              fill="#333"
+            >
+              {name}
+            </text>
+          </Annotation>
+        ))}
+      </ComposableMap>
     </Container>
   );
-};
+}
