@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Container } from "@mui/material";
 import {
   ComposableMap,
@@ -65,36 +65,69 @@ const stateLabels = [
 ];
 
 export default function HomePage() {
+  const [stateData, setStateData] = useState({});
+
+  useEffect(() => {
+    fetch("http://localhost:8080/popular_vote_map")
+      .then(response => response.json())
+      .then(data => {
+        const stateVoteData = {};
+        data.forEach(({ state_name, candidate_name, popular_vote }) => {
+          if (!stateVoteData[state_name]) {
+            stateVoteData[state_name] = { votes: {}, leadingParty: null };
+          }
+          stateVoteData[state_name].votes[candidate_name] = popular_vote;
+          const votes = stateVoteData[state_name].votes;
+          const leadingParty = Object.keys(votes).reduce((a, b) => votes[a] > votes[b] ? a : b);
+          stateVoteData[state_name].leadingParty = leadingParty;
+        });
+        setStateData(stateVoteData);
+      });
+  }, []);
+
+  const getColor = (stateName) => {
+    const state = stateData[stateName];
+    if (!state) return "#DDD";
+    return state.leadingParty === 'Joe Biden' ? "#ADD8E6" : "#FFB3B2";
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <ComposableMap projection="geoAlbersUsa">
         <Geographies geography={geoUrl}>
           {({ geographies }) =>
-            geographies.map((geo) => (
-              <Geography
-                key={geo.rsmKey}
-                geography={geo}
-                fill="#DDD"
-                stroke="#FFF"
-                style={{
-                  default: {
-                    fill: "#DDD",
-                    outline: "none",
-                  },
-                  hover: {
-                    fill: "#AAA",
-                    outline: "none",
-                  },
-                  pressed: {
-                    fill: "#888",
-                    outline: "none",
-                  },
-                }}
-              />
-            ))
+            geographies.map((geo) => {
+              const stateName = geo.properties.name;
+              const fillColor = getColor(stateName);
+              const stateVotes = stateData[stateName]?.votes || {};
+
+              return (
+                <Geography
+                  key={geo.rsmKey}
+                  geography={geo}
+                  fill={fillColor}
+                  stroke="#FFF"
+                  style={{
+                    default: { fill: fillColor, outline: "none" },
+                    hover: { fill: "#AAA", outline: "none" },
+                    pressed: { fill: "#888", outline: "none" },
+                  }}
+                  onMouseEnter={() => {
+                    const voteInfo = Object.entries(stateVotes)
+                      .map(([candidate, votes]) => `${candidate}: ${votes}`)
+                      .join("\n");
+                    
+                    document.querySelector("#tooltip").innerText = `${stateName}\n${voteInfo}`;
+                  }}
+                  onMouseLeave={() => {
+                    document.querySelector("#tooltip").innerText = "";
+                  }}
+                />
+              );
+            })
           }
         </Geographies>
-        {/* Add state labels */}
+
         {stateLabels.map(({ name, coordinates }) => (
           <Annotation
             key={name}
@@ -116,6 +149,7 @@ export default function HomePage() {
           </Annotation>
         ))}
       </ComposableMap>
+      <div id="tooltip" style={{ position: 'absolute', backgroundColor: 'white', padding: '5px', border: '1px solid black' }}></div>
     </Container>
   );
 }

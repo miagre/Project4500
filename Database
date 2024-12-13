@@ -1,37 +1,42 @@
-CREATE TABLE Candidates (
-    candidate_id INT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    party VARCHAR(50),
-    election_year INT,
-    UNIQUE(name, election_year)
+CREATE TABLE CANDIDATES (
+    candidate_id SERIAL PRIMARY KEY,
+    candidate_name VARCHAR(50),
+    candidate_party VARCHAR(10)
 );
 
-CREATE TABLE States (
-    state_id INT PRIMARY KEY,
-    state_name VARCHAR(50),
-    abbreviation CHAR(2) UNIQUE
+CREATE TABLE STATES (
+    state_id SERIAL PRIMARY KEY,
+    state_name VARCHAR(50) NOT NULL,
+    state_abbreviation CHAR(2) NOT NULL UNIQUE,
+    electoral_votes INTEGER
 );
 
-CREATE TABLE Campaigns (
-    campaign_id INT PRIMARY KEY,
-    candidate_id INT REFERENCES Candidates(candidate_id),
-    state_id INT REFERENCES States(state_id),
-    election_year INT,
-    total_votes INT,
-    total_spent DECIMAL(18, 2),
-    cost_per_vote DECIMAL(18, 2)
+CREATE TABLE CONTRIBUTORS (
+    contributor_id SERIAL PRIMARY KEY,
+    state_id INTEGER,
+    first_name VARCHAR(20),
+    last_name VARCHAR(20),
+    zipcode INTEGER,
+    employer VARCHAR(24),
+    occupation VARCHAR(24),
+    FOREIGN KEY (state_id) REFERENCES STATES (state_id)
 );
 
-CREATE TABLE Expenditures (
-    expenditure_id INT PRIMARY KEY,
-    campaign_id INT REFERENCES Campaigns(campaign_id),
-    type VARCHAR(50),
-    amount DECIMAL(18, 2)
+CREATE TABLE ELECTION_STATE_RESULTS (
+    id SERIAL PRIMARY KEY,
+    state_id INTEGER,
+    candidate_id INTEGER,
+    popular_vote INTEGER,
+    FOREIGN KEY (state_id) REFERENCES STATES (state_id),
+    FOREIGN KEY (candidate_id) REFERENCES CANDIDATES (candidate_id)
 );
 
-CREATE TABLE Votes (
-    vote_id INT PRIMARY KEY,
-    campaign_id INT REFERENCES Campaigns(campaign_id),
-    state_id INT REFERENCES States(state_id),
-    total_votes INT NOT NULL
+CREATE TABLE CONTRIBUTIONS (
+    contribution_id SERIAL PRIMARY KEY,
+    candidate_id INTEGER,
+    contributor_id INTEGER,
+    contribution_date DATE,
+    amount FLOAT(24),
+    FOREIGN KEY (candidate_id) REFERENCES CANDIDATES (candidate_id),
+    FOREIGN KEY (contributor_id) REFERENCES CONTRIBUTORS (contributor_id)
 );
