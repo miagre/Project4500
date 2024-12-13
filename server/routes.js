@@ -23,8 +23,6 @@ connection.connect((err) => err && console.log(err));
  ******************/
 
 const popular_vote_map = async function(req, res) {
-  const { year } = req.params;
-
   connection.query(`
     SELECT 
         s.state_name, 
@@ -34,7 +32,7 @@ const popular_vote_map = async function(req, res) {
         es.winner
     FROM election_state_results es 
     JOIN states s ON es.state_id = s.state_id 
-    WHERE es.year = ${year}
+    WHERE es.year = 2020
   `, (err, data) => {
     if (err) {
       console.log(err);
@@ -45,6 +43,43 @@ const popular_vote_map = async function(req, res) {
   });
 }
 
+const popular_vote_by_state = async function(req, res) {
+  const { state } = req.params;
+  connection.query(`
+    SELECT 
+        s.state_name,
+        es.popular_vote_dem, 
+        es.popular_vote_rep,
+        es.winner
+    FROM election_state_results es 
+    JOIN states s ON es.state_id = s.state_id 
+    WHERE s.state_name = '${state}'
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json({});
+    } else {
+      res.json(data.rows[0]);
+    }
+  });
+}
+
+const state_contributions_map = async function(req, res) {
+  res.json({});
+}
+
+const contributors_by_state = async function(req, res) {
+  res.json({});
+}
+
+const employer_contributions = async function(req, res) {
+  res.json({});
+}
+
 module.exports = {
-  popular_vote_map
+  popular_vote_map,
+  popular_vote_by_state,
+  state_contributions_map,
+  contributors_by_state,
+  employer_contributions,
 }
