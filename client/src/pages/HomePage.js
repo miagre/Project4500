@@ -93,6 +93,7 @@ export default function HomePage() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <div id="tooltip" style={{ position: 'absolute', backgroundColor: 'white', padding: '5px', border: '1px solid black' }}></div>
       <ComposableMap projection="geoAlbersUsa">
         <Geographies geography={geoUrl}>
           {({ geographies }) =>
@@ -149,7 +150,6 @@ export default function HomePage() {
           </Annotation>
         ))}
       </ComposableMap>
-      <div id="tooltip" style={{ position: 'absolute', backgroundColor: 'white', padding: '5px', border: '1px solid black' }}></div>
     </Container>
   );
 }

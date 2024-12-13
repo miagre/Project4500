@@ -36,7 +36,7 @@ export default function NavBar() {
     <AppBar position='static'>
       <Container maxWidth='xl'>
         <Toolbar disableGutters>
-          <NavText href='/' text='SWIFTIFY' isMain />
+          <NavText href='/' text='Home' isMain />
           <NavText href='/insights' text='Insights' />
         </Toolbar>
       </Container>

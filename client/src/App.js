@@ -32,8 +32,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/albums/:album_id" element={<AlbumInfoPage />} />
-          <Route path="/songs" element={<SongsPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
