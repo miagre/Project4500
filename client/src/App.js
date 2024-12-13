@@ -31,7 +31,7 @@ export default function App() {
         <NavBar />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/albums" element={<InsightsPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
           <Route path="/albums/:album_id" element={<AlbumInfoPage />} />
           <Route path="/songs" element={<SongsPage />} />
         </Routes>
