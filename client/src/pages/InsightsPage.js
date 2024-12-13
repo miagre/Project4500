@@ -1,5 +1,5 @@
 import React from 'react';
-import ContributionsAnalysis from './ContributionsAnalysis';
+import ContributionsAnalysis from "../ContAnalysis";
 
 const InsightsPage = () => {
   return (
