@@ -67,16 +67,18 @@ const popular_vote_by_state = async function(req, res) {
 // Gets the top 5 states by total contributions received
 const top_state_contributions = async function(req, res) {
   connection.query(`
-    SELECT 
-      S.state_name, 
-      SUM(C.amount) AS total_contributions
-    FROM 
-      CONTRIBUTIONS C
-      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
-      JOIN STATES S ON CO.state_id = S.state_id
-    GROUP BY S.state_name
-    ORDER BY total_contributions DESC
-    LIMIT 5
+    SELECT state_name, total_contributions FROM (
+      SELECT 
+        S.state_name, 
+        SUM(C.amount) AS total_contributions,
+        RANK() OVER (ORDER BY SUM(C.amount) DESC) AS rank
+      FROM 
+        CONTRIBUTIONS C
+        JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
+        JOIN STATES S ON CO.state_id = S.state_id
+      GROUP BY S.state_name
+    ) ranked_contributions 
+    WHERE rank <= 5;
   `, (err, data) => {
     if (err) {
       console.log(err);
@@ -145,6 +147,9 @@ const contributors_by_state = async function(req, res) {
       JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
       JOIN STATES S ON CO.state_id = S.state_id
     WHERE S.state_name = '${req.params.state_name}'
+      AND EXISTS (
+        SELECT 1 FROM STATES WHERE state_name = '${req.params.state_name}'
+      )
     GROUP BY CO.first_name, CO.last_name
     ORDER BY total_contributions DESC
     LIMIT 5
