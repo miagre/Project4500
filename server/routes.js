@@ -144,18 +144,19 @@ const contributors_by_state = async function(req, res) {
     SELECT 
       CO.first_name, 
       CO.last_name, 
-      SUM(C.amount) AS total_contributions
+      SUM(CN.amount) AS total_contributions
     FROM 
-      CONTRIBUTIONS C
-      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
+      CONTRIBUTIONS CN
+      JOIN CONTRIBUTORS CO ON CN.contributor_id = CO.contributor_id
       JOIN STATES S ON CO.state_id = S.state_id
-    WHERE S.state_name = '${req.params.state_name}'
-      AND EXISTS (
-        SELECT 1 FROM STATES WHERE state_name = '${req.params.state_name}'
-      )
-    GROUP BY CO.first_name, CO.last_name
-    ORDER BY total_contributions DESC
-    LIMIT 5
+    WHERE 
+      S.state_name = '${req.params.state}'
+    GROUP BY 
+      CO.first_name, 
+      CO.last_name
+    ORDER BY 
+      total_contributions DESC
+    LIMIT 5;
   `, (err, data) => {
     if (err) {
       console.log(err);
