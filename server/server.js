@@ -4,9 +4,7 @@ const config = require('./config');
 const routes = require('./routes');
 
 const app = express();
-app.use(cors({
-  origin: '*',
-}));
+app.use(cors());
 
 app.set('case sensitive routing', true);
 

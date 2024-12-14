@@ -99,6 +99,7 @@ export default function HomePage() {
 
   useEffect(() => {
     fetch("project4500.vercel.app/popular_vote_map")
+      // .then((response) => response.json())
       .then((response) => response.json())
       .then((data) => {
         const stateVoteData = {};
