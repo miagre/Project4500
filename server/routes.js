@@ -211,9 +211,6 @@ const occupation_contributions = async function(req, res) {
   });
 }
 
-
-
-
 module.exports = {
   popular_vote_map,
   popular_vote_by_state,
