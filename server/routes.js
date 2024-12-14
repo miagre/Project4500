@@ -167,14 +167,15 @@ const contributors_by_state = async function(req, res) {
 const employer_contributions = async function(req, res) {
   connection.query(`
     SELECT 
-      CO.employer, 
-      SUM(C.amount) AS total_contributions
-    FROM 
-      CONTRIBUTIONS C
-      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
-    GROUP BY CO.employer
+      employer,
+      num_contributors,
+      total_contributions,
+      avg_contribution,
+      max_contribution,
+      min_contribution
+    FROM employer_contribution_stats
     ORDER BY total_contributions DESC
-    LIMIT 5
+    LIMIT 20
   `, (err, data) => {
     if (err) {
       console.log(err);
@@ -185,18 +186,22 @@ const employer_contributions = async function(req, res) {
   });
 }
 
-// Gets the top 5 occupations by total contribution amount
+// Gets the top 20 occupations by total contribution amount
 const occupation_contributions = async function(req, res) {
   connection.query(`
-    SELECT 
-      CO.occupation, 
-      SUM(C.amount) AS total_contributions
+   SELECT 
+    occupation,
+    total_contributions,
+    num_contributors,
+    avg_contribution,
+    max_contribution,
+    min_contribution
     FROM 
-      CONTRIBUTIONS C
-      JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
-    GROUP BY CO.occupation
-    ORDER BY total_contributions DESC
-    LIMIT 5
+    occupation_contribution_stats
+    ORDER BY 
+    total_contributions DESC
+LIMIT 20;
+
   `, (err, data) => {
     if (err) {
       console.log(err);
@@ -207,8 +212,101 @@ const occupation_contributions = async function(req, res) {
   });
 }
 
+// Gets all employers with their contribution stats
+const all_employer_stats = async function(req, res) {
+  connection.query(`
+    SELECT 
+      employer,
+      num_contributors,
+      total_contributions,
+      avg_contribution,
+      max_contribution,
+      min_contribution
+    FROM employer_contribution_stats
+    ORDER BY ${req.query.sort_by || 'total_contributions'} ${req.query.sort_order || 'DESC'}
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
+}
 
+// Gets employers filtered by contribution amount
+const filtered_employer_stats = async function(req, res) {
+  const amount = parseFloat(req.query.amount);
+  const comparison = req.query.comparison; // 'greater' or 'less'
+  
+  connection.query(`
+    SELECT 
+      employer,
+      num_contributors,
+      total_contributions,
+      avg_contribution,
+      max_contribution,
+      min_contribution
+    FROM employer_contribution_stats
+    WHERE total_contributions ${comparison === 'greater' ? '>' : '<'} $1
+    ORDER BY total_contributions DESC
+  `, [amount], (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
+}
 
+// Gets all occupations with their contribution stats
+const all_occupation_stats = async function(req, res) {
+  connection.query(`
+    SELECT 
+      occupation,
+      num_contributors,
+      total_contributions,
+      avg_contribution,
+      max_contribution,
+      min_contribution
+    FROM occupation_contribution_stats
+    ORDER BY ${req.query.sort_by || 'total_contributions'} ${req.query.sort_order || 'DESC'}
+  `, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
+}
+
+// Gets occupations filtered by contribution amount
+const filtered_occupation_stats = async function(req, res) {
+  const amount = parseFloat(req.query.amount);
+  const comparison = req.query.comparison; // 'greater' or 'less'
+  
+  connection.query(`
+    SELECT 
+      occupation,
+      num_contributors,
+      total_contributions,
+      avg_contribution,
+      max_contribution,
+      min_contribution
+    FROM occupation_contribution_stats
+    WHERE total_contributions ${comparison === 'greater' ? '>' : '<'} $1
+    ORDER BY total_contributions DESC
+  `, [amount], (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data.rows);
+    }
+  });
+}
 
 module.exports = {
   popular_vote_map,
@@ -218,5 +316,9 @@ module.exports = {
   contributions_by_state,
   contributors_by_state,
   employer_contributions,
-  occupation_contributions
+  occupation_contributions,
+  all_employer_stats,
+  filtered_employer_stats,
+  all_occupation_stats,
+  filtered_occupation_stats
 }
