@@ -12,14 +12,14 @@ export default function StatePage() {
 
   useEffect(() => {
     // Fetch the popular vote for each candidate in this state
-    fetch(`http://localhost:8080/popular_vote_by_state/${stateName}`)
+    fetch(`project4500.vercel.app/popular_vote_by_state/${stateName}`)
       .then(response => response.json())
       .then(data => {
         setStateData(prevData => ({ ...prevData, popularVotes: data }));
       });
 
     // Fetch the contributions for each candidate in this state
-    fetch(`http://localhost:8080/contributions_by_state/${stateName}`)
+    fetch(`project4500.vercel.app/contributions_by_state/${stateName}`)
       .then(response => response.json())
       .then(data => {
         console.log(data);
@@ -27,7 +27,7 @@ export default function StatePage() {
       });
 
     // Fetch the top 5 contributors for this state
-    fetch(`http://localhost:8080/contributors_by_state/${stateName}`)
+    fetch(`project4500.vercel.app/contributors_by_state/${stateName}`)
       .then(response => response.json())
       .then(data => {
         setStateData(prevData => ({ ...prevData, topContributors: data }));

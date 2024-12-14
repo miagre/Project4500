@@ -66,12 +66,12 @@ const InsightsPage = () => {
   }, [filterAmount, comparisonType, employerSortField, occupationSortField]);
 
   const fetchData = async () => {
-    let employerUrl = `http://localhost:8080/all_employer_stats?sort_by=${employerSortField}`;
-    let occupationUrl = `http://localhost:8080/all_occupation_stats?sort_by=${occupationSortField}`;
+    let employerUrl = `project4500.vercel.app/all_employer_stats?sort_by=${employerSortField}`;
+    let occupationUrl = `project4500.vercel.app/all_occupation_stats?sort_by=${occupationSortField}`;
 
     if (filterAmount) {
-      employerUrl = `http://localhost:8080/filtered_employer_stats?amount=${filterAmount}&comparison=${comparisonType}`;
-      occupationUrl = `http://localhost:8080/filtered_occupation_stats?amount=${filterAmount}&comparison=${comparisonType}`;
+      employerUrl = `project4500.vercel.app/filtered_employer_stats?amount=${filterAmount}&comparison=${comparisonType}`;
+      occupationUrl = `project4500.vercel.app/filtered_occupation_stats?amount=${filterAmount}&comparison=${comparisonType}`;
     }
 
     try {

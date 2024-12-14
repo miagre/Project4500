@@ -98,7 +98,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:8080/popular_vote_map")
+    fetch("project4500.vercel.app/popular_vote_map")
       .then((response) => response.json())
       .then((data) => {
         const stateVoteData = {};
@@ -121,7 +121,7 @@ export default function HomePage() {
         setStateData(stateVoteData);
       });
 
-    fetch("http://localhost:8080/state_contributions_map")
+    fetch("project4500.vercel.app/state_contributions_map")
       .then((response) => response.json())
       .then((data) => {
         setStateData((prevStateData) => {
@@ -146,7 +146,7 @@ export default function HomePage() {
         });
       });
 
-    fetch("http://localhost:8080/electoral_votes_map")
+    fetch("project4500.vercel.app/electoral_votes_map")
       .then((response) => response.json())
       .then((data) => {
         const votesMap = {};
