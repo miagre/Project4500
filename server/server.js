@@ -25,6 +25,7 @@ app.get('/occupation_contributions', routes.occupation_contributions);
 app.get('/all_employer_stats', routes.all_employer_stats);
 app.get('/filtered_employer_stats', routes.filtered_employer_stats);
 app.get('/all_occupation_stats', routes.all_occupation_stats);
+app.get('/electoral_votes_map', routes.electoral_votes_map);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)

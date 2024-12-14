@@ -359,5 +359,6 @@ module.exports = {
   all_employer_stats,
   filtered_employer_stats,
   all_occupation_stats,
-  filtered_occupation_stats
+  filtered_occupation_stats,
+  electoral_votes_map
 }
