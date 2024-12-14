@@ -163,7 +163,7 @@ const contributors_by_state = async function(req, res) {
   });
 }
 
-// Gets the top 5 employers by total contribution amount
+// Gets the top 20 employers by total contribution amount
 const employer_contributions = async function(req, res) {
   connection.query(`
     SELECT 
