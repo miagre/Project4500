@@ -66,6 +66,7 @@ const stateLabels = [
 
 export default function HomePage() {
   const [stateData, setStateData] = useState({});
+  const [stateContributionData, setContributionData] = useState({});
 
   useEffect(() => {
     fetch("http://localhost:8080/popular_vote_map")
@@ -74,7 +75,7 @@ export default function HomePage() {
         const stateVoteData = {};
         data.forEach(({ state_name, candidate_name, popular_vote }) => {
           if (!stateVoteData[state_name]) {
-            stateVoteData[state_name] = { votes: {}, leadingParty: null };
+            stateVoteData[state_name] = { votes: {}, leadingParty: null, contributions: {}, totalContributions: 0 };
           }
           stateVoteData[state_name].votes[candidate_name] = popular_vote;
           const votes = stateVoteData[state_name].votes;
@@ -82,6 +83,22 @@ export default function HomePage() {
           stateVoteData[state_name].leadingParty = leadingParty;
         });
         setStateData(stateVoteData);
+      });
+
+      fetch("http://localhost:8080/state_contributions_map")
+      .then(response => response.json())
+      .then(data => {
+        setStateData(prevStateData => {
+          const updatedStateData = { ...prevStateData };
+          data.forEach(({ state_name, candidate_party, total_contributions }) => {
+            if (!updatedStateData[state_name]) {
+              updatedStateData[state_name] = { votes: {}, leadingParty: null, contributions: {}, totalContributions: 0 };
+            }
+            updatedStateData[state_name].contributions[candidate_party] = total_contributions;
+            updatedStateData[state_name].totalContributions += total_contributions;
+          });
+          return updatedStateData;
+        });
       });
   }, []);
 
@@ -101,6 +118,8 @@ export default function HomePage() {
               const stateName = geo.properties.name;
               const fillColor = getColor(stateName);
               const stateVotes = stateData[stateName]?.votes || {};
+              const stateContributions = stateData[stateName]?.contributions || {};
+              const totalContributions = stateData[stateName]?.totalContributions || 0;
 
               return (
                 <Geography
@@ -117,8 +136,11 @@ export default function HomePage() {
                     const voteInfo = Object.entries(stateVotes)
                       .map(([candidate, votes]) => `${candidate}: ${votes}`)
                       .join("\n");
+                    const contributionInfo = Object.entries(stateContributions)
+                      .map(([party, contributions]) => `${party}: $${contributions}`)
+                      .join("\n");
                     
-                    document.querySelector("#tooltip").innerText = `${stateName}\n${voteInfo}`;
+                    document.querySelector("#tooltip").innerText = `${stateName}\nVotes:\n${voteInfo}\nContributions:\n${contributionInfo}\nTotal Contributions: $${totalContributions}`;
                   }}
                   onMouseLeave={() => {
                     document.querySelector("#tooltip").innerText = "";
