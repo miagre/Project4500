@@ -118,13 +118,16 @@ const contributions_by_state = async function(req, res) {
   connection.query(`
     SELECT 
       S.state_name, 
+      CA.candidate_party, 
       SUM(C.amount) AS total_contributions
     FROM 
       CONTRIBUTIONS C
+      JOIN CANDIDATES CA ON C.candidate_id = CA.candidate_id
       JOIN CONTRIBUTORS CO ON C.contributor_id = CO.contributor_id
       JOIN STATES S ON CO.state_id = S.state_id
-    WHERE S.state_name = '${req.params.state_name}'
-    GROUP BY S.state_name
+    WHERE S.state_name = '${req.params.state}'
+    GROUP BY S.state_name, CA.candidate_party
+    ORDER BY S.state_name, total_contributions DESC
   `, (err, data) => {
     if (err) {
       console.log(err);

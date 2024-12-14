@@ -226,7 +226,7 @@ export default function HomePage() {
                     hover: { fill: "#AAA", outline: "none" },
                     pressed: { fill: "#888", outline: "none" },
                   }}
-                  onClick={() => navigate(`/state/${stateName}`)}
+                  onClick={() => navigate(`/state/${geo.properties.name}`)}
                   onMouseEnter={(evt) => {
                     const tooltip = document.querySelector("#tooltip");
 
