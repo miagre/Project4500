@@ -119,27 +119,23 @@ const ContributionsAnalysis = () => {
       <Table>
         <thead>
           <tr>
-            <TableHeader onClick={() => handleSort('candidate_name')}>
-              Candidate
+            <TableHeader onClick={() => handleSort('employer')}>
+              Company
             </TableHeader>
             <TableHeader onClick={() => handleSort('total_contributions')}>
               Total Contributions
             </TableHeader>
-            <TableHeader onClick={() => handleSort('total_disbursements')}>
-              Total Disbursements
-            </TableHeader>
-            <TableHeader onClick={() => handleSort('individual_contributions')}>
-              Individual Contributions
+            <TableHeader onClick={() => handleSort('num_contributors')}>
+              #of Contributors
             </TableHeader>
           </tr>
         </thead>
         <tbody>
           {filteredData.map((item, index) => (
             <TableRow key={index}>
-              <TableCell>{item.candidate_name}</TableCell>
+              <TableCell>{item.employer}</TableCell>
               <TableCell>{formatCurrency(item.total_contributions)}</TableCell>
-              <TableCell>{formatCurrency(item.total_disbursements)}</TableCell>
-              <TableCell>{formatCurrency(item.individual_contributions)}</TableCell>
+              <TableCell>{formatCurrency(item.num_contributors)}</TableCell>
             </TableRow>
           ))}
         </tbody>
