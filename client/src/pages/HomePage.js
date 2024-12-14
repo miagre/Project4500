@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  Container,
-  FormControlLabel,
-  Switch,
-  Typography,
-  Box,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom"
+import { Container, Button, ButtonGroup, Typography, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import {
   ComposableMap,
   Geographies,
@@ -71,9 +65,24 @@ const stateLabels = [
   { name: "WY", coordinates: [-107.2085, 42.7475] },
 ];
 
+const formatNumber = (num) => {
+  return num.toLocaleString("en-US");
+};
+
+const formatDollars = (num) => {
+  return `$${num.toLocaleString("en-US")}`;
+};
+
+const getColoredValue = (value1, value2, prefix = "") => {
+  const val1 = Number(value1);
+  const val2 = Number(value2);
+  const color = val1 > val2 ? "green" : "red";
+  return `<span style="color: ${color}">${prefix}${formatNumber(val1)}</span>`;
+};
+
 export default function HomePage() {
   const [stateData, setStateData] = useState({});
-  const [showContributions, setShowContributions] = useState(false);
+  const [showContributions, setShowContributions] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -151,22 +160,35 @@ export default function HomePage() {
           justifyContent: "center",
         }}
       >
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showContributions}
-              onChange={(e) => setShowContributions(e.target.checked)}
-              color="primary"
-            />
-          }
-          label={
-            <Typography>
-              {showContributions
-                ? "Showing Campaign Contributions"
-                : "Showing Popular Vote"}
-            </Typography>
-          }
-        />
+        <ButtonGroup
+          variant="contained"
+          aria-label="view selection button group"
+        >
+          <Button
+            onClick={() => setShowContributions(true)}
+            color={showContributions ? "primary" : "inherit"}
+            sx={{
+              backgroundColor: showContributions ? "#1976d2" : "#e0e0e0",
+              "&:hover": {
+                backgroundColor: showContributions ? "#1565c0" : "#d5d5d5",
+              },
+            }}
+          >
+            Campaign Contributions
+          </Button>
+          <Button
+            onClick={() => setShowContributions(false)}
+            color={!showContributions ? "primary" : "inherit"}
+            sx={{
+              backgroundColor: !showContributions ? "#1976d2" : "#e0e0e0",
+              "&:hover": {
+                backgroundColor: !showContributions ? "#1565c0" : "#d5d5d5",
+              },
+            }}
+          >
+            Popular Vote
+          </Button>
+        </ButtonGroup>
       </Box>
 
       <div
@@ -174,8 +196,10 @@ export default function HomePage() {
         style={{
           position: "absolute",
           backgroundColor: "white",
-          padding: "5px",
+          padding: "10px",
           border: "1px solid black",
+          borderRadius: "4px",
+          pointerEvents: "none",
         }}
       ></div>
       <ComposableMap projection="geoAlbersUsa">
@@ -203,23 +227,56 @@ export default function HomePage() {
                     pressed: { fill: "#888", outline: "none" },
                   }}
                   onClick={() => navigate(`/state/${stateName}`)}
-                  onMouseEnter={() => {
-                    const voteInfo = Object.entries(stateVotes)
-                      .map(([candidate, votes]) => `${candidate}: ${votes}`)
-                      .join("\n");
-                    const contributionInfo = Object.entries(stateContributions)
-                      .map(
-                        ([party, contributions]) =>
-                          `${party}: $${contributions}`
-                      )
-                      .join("\n");
+                  onMouseEnter={(evt) => {
+                    const tooltip = document.querySelector("#tooltip");
 
-                    document.querySelector(
-                      "#tooltip"
-                    ).innerText = `${stateName}\nVotes:\n${voteInfo}\nContributions:\n${contributionInfo}\nTotal Contributions: $${totalContributions}`;
+                    // Get vote values
+                    const bidenVotes = Number(stateVotes["Joe Biden"] || 0);
+                    const trumpVotes = Number(stateVotes["Donald Trump"] || 0);
+
+                    // Get contribution values
+                    const demContributions = Number(
+                      stateContributions["Democratic"] || 0
+                    );
+                    const repContributions = Number(
+                      stateContributions["Republican"] || 0
+                    );
+
+                    tooltip.innerHTML = `
+                      <div style="font-weight: bold; margin-bottom: 5px">${stateName}</div>
+                      <div style="margin-bottom: 5px">
+                        <div><u>Votes</u></div>
+                        Joe Biden: ${getColoredValue(bidenVotes, trumpVotes)}
+                        <br/>
+                        Donald Trump: ${getColoredValue(trumpVotes, bidenVotes)}
+                      </div>
+                      <div>
+                        <div><u>Contributions</u></div>
+                        Democratic: ${getColoredValue(
+                          demContributions,
+                          repContributions,
+                          "$"
+                        )}
+                        <br/>
+                        Republican: ${getColoredValue(
+                          repContributions,
+                          demContributions,
+                          "$"
+                        )}
+                        <br/>
+                        <div style="margin-top: 5px">
+                          Total: ${formatDollars(totalContributions)}
+                        </div>
+                      </div>
+                    `;
+
+                    // Position tooltip near mouse
+                    tooltip.style.left = `${evt.clientX + 10}px`;
+                    tooltip.style.top = `${evt.clientY + 10}px`;
                   }}
                   onMouseLeave={() => {
-                    document.querySelector("#tooltip").innerText = "";
+                    const tooltip = document.querySelector("#tooltip");
+                    tooltip.innerHTML = "";
                   }}
                 />
               );
