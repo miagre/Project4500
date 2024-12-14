@@ -19,9 +19,10 @@ export default function StatePage() {
       });
 
     // Fetch the contributions for each candidate in this state
-    fetch(`http://localhost:8080/state_contributions_map/${stateName}`)
+    fetch(`http://localhost:8080/contributions_by_state/${stateName}`)
       .then(response => response.json())
       .then(data => {
+        console.log(data);
         setStateData(prevData => ({ ...prevData, contributions: data }));
       });
 

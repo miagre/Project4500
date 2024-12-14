@@ -33,7 +33,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/state/:state" element={<StatePage />} />
+          <Route path="/state/:stateName" element={<StatePage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
