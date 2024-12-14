@@ -360,7 +360,7 @@ export default function HomePage() {
 
                     tooltip.innerHTML = `
                       <div style="font-weight: bold; margin-bottom: 5px">
-                        ${stateName} (${stateElectoralVotes} electoral votes)
+                        ${stateName}
                       </div>
                       <div style="margin-bottom: 5px">
                         <div><u>Votes</u></div>
