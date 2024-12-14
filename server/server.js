@@ -14,6 +14,7 @@ app.set('case sensitive routing', true);
 // provide their handlers that we implemented in routes.js
 
 // add the routes
+app.get("/", (req, res) => res.send("Express on Vercel"));
 app.get('/popular_vote_map', routes.popular_vote_map);
 app.get('/popular_vote_by_state/:state_name', routes.popular_vote_by_state);
 app.get('/top_state_contributions', routes.top_state_contributions);
