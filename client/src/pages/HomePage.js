@@ -80,9 +80,21 @@ const getColoredValue = (value1, value2, prefix = "") => {
   return `<span style="color: ${color}">${prefix}${formatNumber(val1)}</span>`;
 };
 
+const getContributionsPerVote = (contributions, electoralVotes) => {
+  if (!contributions) return 0;
+  return contributions / electoralVotes;
+};
+
+const getHeatmapColor = (value, minValue, maxValue) => {
+  if (!value) return "#DDD";
+  const intensity = (value - minValue) / (maxValue - minValue);
+  return `rgb(255, ${Math.round(255 - 155 * intensity)}, 100)`;
+};
+
 export default function HomePage() {
   const [stateData, setStateData] = useState({});
-  const [showContributions, setShowContributions] = useState(true);
+  const [viewType, setViewType] = useState("contributions");
+  const [electoralVotes, setElectoralVotes] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -133,20 +145,58 @@ export default function HomePage() {
           return updatedStateData;
         });
       });
+
+    fetch("http://localhost:8080/electoral_votes_map")
+      .then((response) => response.json())
+      .then((data) => {
+        const votesMap = {};
+        data.forEach(({ state_abbreviation, electoral_votes }) => {
+          votesMap[state_abbreviation] = electoral_votes;
+        });
+        setElectoralVotes(votesMap);
+      });
   }, []);
 
   const getColor = (stateName) => {
     const state = stateData[stateName];
     if (!state) return "#DDD";
 
-    if (showContributions) {
-      // Compare contributions between parties
-      const dem = state.contributions["Democratic"] || 0;
-      const rep = state.contributions["Republican"] || 0;
-      return dem > rep ? "#ADD8E6" : "#FFB3B2";
-    } else {
-      // Use existing popular vote logic
-      return state.leadingParty === "Joe Biden" ? "#ADD8E6" : "#FFB3B2";
+    switch (viewType) {
+      case "contributions":
+        const dem = state.contributions["Democratic"] || 0;
+        const rep = state.contributions["Republican"] || 0;
+        return dem > rep ? "#ADD8E6" : "#FFB3B2";
+
+      case "votes":
+        return state.leadingParty === "Joe Biden" ? "#ADD8E6" : "#FFB3B2";
+
+      case "heatmap":
+        const stateAbbrev = stateLabels.find((s) => s.name === stateName)?.name;
+        const votes = electoralVotes[stateAbbrev] || 1;
+        const contributionsPerVote = getContributionsPerVote(
+          state.totalContributions,
+          votes
+        );
+
+        // Get min and max values for all states
+        const allValues = Object.keys(stateData)
+          .map((state) => {
+            const abbrev = stateLabels.find((s) => s.name === state)?.name;
+            const ev = electoralVotes[abbrev] || 1;
+            return getContributionsPerVote(
+              stateData[state].totalContributions,
+              ev
+            );
+          })
+          .filter((val) => val > 0);
+
+        const minValue = Math.min(...allValues);
+        const maxValue = Math.max(...allValues);
+
+        return getHeatmapColor(contributionsPerVote, minValue, maxValue);
+
+      default:
+        return "#DDD";
     }
   };
 
@@ -165,31 +215,92 @@ export default function HomePage() {
           aria-label="view selection button group"
         >
           <Button
-            onClick={() => setShowContributions(true)}
-            color={showContributions ? "primary" : "inherit"}
+            onClick={() => setViewType("contributions")}
+            color={viewType === "contributions" ? "primary" : "inherit"}
             sx={{
-              backgroundColor: showContributions ? "#1976d2" : "#e0e0e0",
+              backgroundColor:
+                viewType === "contributions" ? "#1976d2" : "#e0e0e0",
               "&:hover": {
-                backgroundColor: showContributions ? "#1565c0" : "#d5d5d5",
+                backgroundColor:
+                  viewType === "contributions" ? "#1565c0" : "#d5d5d5",
               },
             }}
           >
             Campaign Contributions
           </Button>
           <Button
-            onClick={() => setShowContributions(false)}
-            color={!showContributions ? "primary" : "inherit"}
+            onClick={() => setViewType("votes")}
+            color={viewType === "votes" ? "primary" : "inherit"}
             sx={{
-              backgroundColor: !showContributions ? "#1976d2" : "#e0e0e0",
+              backgroundColor: viewType === "votes" ? "#1976d2" : "#e0e0e0",
               "&:hover": {
-                backgroundColor: !showContributions ? "#1565c0" : "#d5d5d5",
+                backgroundColor: viewType === "votes" ? "#1565c0" : "#d5d5d5",
               },
             }}
           >
             Popular Vote
           </Button>
+          <Button
+            onClick={() => setViewType("heatmap")}
+            color={viewType === "heatmap" ? "primary" : "inherit"}
+            sx={{
+              backgroundColor: viewType === "heatmap" ? "#1976d2" : "#e0e0e0",
+              "&:hover": {
+                backgroundColor: viewType === "heatmap" ? "#1565c0" : "#d5d5d5",
+              },
+            }}
+          >
+            Contributions per Vote
+          </Button>
         </ButtonGroup>
       </Box>
+
+      {viewType === "heatmap" && (
+        <Box
+          sx={{
+            mb: 2,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+          }}
+        >
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            Campaign dollars per electoral vote (shows which states received
+            disproportionately high campaign contributions relative to their
+            electoral votes)
+          </Typography>
+          <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div
+                style={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "rgb(255, 255, 100)",
+                  marginRight: 5,
+                }}
+              />
+              <Typography variant="body2">
+                Fewer Dollars per Electoral Vote
+              </Typography>
+            </div>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div
+                style={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: "rgb(255, 100, 100)",
+                  marginRight: 5,
+                }}
+              />
+              <Typography variant="body2">
+                More Dollars per Electoral Vote
+              </Typography>
+            </div>
+          </div>
+        </Box>
+      )}
 
       <div
         id="tooltip"
@@ -229,6 +340,11 @@ export default function HomePage() {
                   onClick={() => navigate(`/state/${stateName}`)}
                   onMouseEnter={(evt) => {
                     const tooltip = document.querySelector("#tooltip");
+                    const stateAbbrev = stateLabels.find(
+                      (s) => s.name === stateName
+                    )?.name;
+                    const stateElectoralVotes =
+                      electoralVotes[stateAbbrev] || 0;
 
                     // Get vote values
                     const bidenVotes = Number(stateVotes["Joe Biden"] || 0);
@@ -243,7 +359,9 @@ export default function HomePage() {
                     );
 
                     tooltip.innerHTML = `
-                      <div style="font-weight: bold; margin-bottom: 5px">${stateName}</div>
+                      <div style="font-weight: bold; margin-bottom: 5px">
+                        ${stateName} (${stateElectoralVotes} electoral votes)
+                      </div>
                       <div style="margin-bottom: 5px">
                         <div><u>Votes</u></div>
                         Joe Biden: ${getColoredValue(bidenVotes, trumpVotes)}
@@ -300,7 +418,7 @@ export default function HomePage() {
               alignmentBaseline="middle"
               fill="#333"
             >
-              {name}
+              {`${name} (${electoralVotes[name] || 0})`}
             </text>
           </Annotation>
         ))}
