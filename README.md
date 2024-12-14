@@ -6,4 +6,4 @@ Problem: In wake of the recent presidential election between Donald Trump and Ka
 Application Functionality: Our application is an interactive dashboard that allows users to visualize the relationship between campaign contributions and election outcomes. It provides features such as state-wise analysis, occupation based outcomes, and contributions by city, and company by company analysis. 
 
 
-Queries: 
+Queries: We explored the connections between campaign contributions and election outcomes using a range of queries. For example, we calculated the cost per vote for each candidate by state, compared overall spending between political parties, and identified the top occupations contributing to campaigns. We also analyzed contribution trends in swing states, looked at electoral votes by state, and evaluated spending efficiency by examining cost per vote across various states and candidates. Additionally, we analyzed contributions by employer and occupation to gain deeper insights into the sources of campaign funding.
