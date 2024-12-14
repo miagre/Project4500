@@ -9,6 +9,7 @@ import AlbumsPage from './pages/AlbumsPage';
 import SongsPage from './pages/SongsPage';
 import AlbumInfoPage from './pages/AlbumInfoPage'
 import InsightsPage from './pages/InsightsPage';
+import StatePage from './pages/StatePage';
 
 // createTheme enables you to customize the look and feel of your app past the default
 // in this case, we only change the color scheme
@@ -32,6 +33,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/insights" element={<InsightsPage />} />
+          <Route path="/state/:state" element={<StatePage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

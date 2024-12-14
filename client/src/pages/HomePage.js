@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container } from "@mui/material";
+import { useNavigate } from "react-router-dom"
 import {
   ComposableMap,
   Geographies,
@@ -66,7 +67,7 @@ const stateLabels = [
 
 export default function HomePage() {
   const [stateData, setStateData] = useState({});
-  const [stateContributionData, setContributionData] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:8080/popular_vote_map")
@@ -116,6 +117,7 @@ export default function HomePage() {
           {({ geographies }) =>
             geographies.map((geo) => {
               const stateName = geo.properties.name;
+              console.log(geo.properties);
               const fillColor = getColor(stateName);
               const stateVotes = stateData[stateName]?.votes || {};
               const stateContributions = stateData[stateName]?.contributions || {};
@@ -132,6 +134,7 @@ export default function HomePage() {
                     hover: { fill: "#AAA", outline: "none" },
                     pressed: { fill: "#888", outline: "none" },
                   }}
+                  onClick={() => navigate(`/state/${stateName}`)}
                   onMouseEnter={() => {
                     const voteInfo = Object.entries(stateVotes)
                       .map(([candidate, votes]) => `${candidate}: ${votes}`)
