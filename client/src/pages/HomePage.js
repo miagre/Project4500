@@ -1,4 +1,11 @@
 import { useEffect, useState } from "react";
+import {
+  Container,
+  FormControlLabel,
+  Switch,
+  Typography,
+  Box,
+} from "@mui/material";
 import { Container } from "@mui/material";
 import { useNavigate } from "react-router-dom"
 import {
@@ -67,37 +74,54 @@ const stateLabels = [
 
 export default function HomePage() {
   const [stateData, setStateData] = useState({});
+  const [showContributions, setShowContributions] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:8080/popular_vote_map")
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         const stateVoteData = {};
         data.forEach(({ state_name, candidate_name, popular_vote }) => {
           if (!stateVoteData[state_name]) {
-            stateVoteData[state_name] = { votes: {}, leadingParty: null, contributions: {}, totalContributions: 0 };
+            stateVoteData[state_name] = {
+              votes: {},
+              leadingParty: null,
+              contributions: {},
+              totalContributions: 0,
+            };
           }
           stateVoteData[state_name].votes[candidate_name] = popular_vote;
           const votes = stateVoteData[state_name].votes;
-          const leadingParty = Object.keys(votes).reduce((a, b) => votes[a] > votes[b] ? a : b);
+          const leadingParty = Object.keys(votes).reduce((a, b) =>
+            votes[a] > votes[b] ? a : b
+          );
           stateVoteData[state_name].leadingParty = leadingParty;
         });
         setStateData(stateVoteData);
       });
 
-      fetch("http://localhost:8080/state_contributions_map")
-      .then(response => response.json())
-      .then(data => {
-        setStateData(prevStateData => {
+    fetch("http://localhost:8080/state_contributions_map")
+      .then((response) => response.json())
+      .then((data) => {
+        setStateData((prevStateData) => {
           const updatedStateData = { ...prevStateData };
-          data.forEach(({ state_name, candidate_party, total_contributions }) => {
-            if (!updatedStateData[state_name]) {
-              updatedStateData[state_name] = { votes: {}, leadingParty: null, contributions: {}, totalContributions: 0 };
+          data.forEach(
+            ({ state_name, candidate_party, total_contributions }) => {
+              if (!updatedStateData[state_name]) {
+                updatedStateData[state_name] = {
+                  votes: {},
+                  leadingParty: null,
+                  contributions: {},
+                  totalContributions: 0,
+                };
+              }
+              updatedStateData[state_name].contributions[candidate_party] =
+                total_contributions;
+              updatedStateData[state_name].totalContributions +=
+                total_contributions;
             }
-            updatedStateData[state_name].contributions[candidate_party] = total_contributions;
-            updatedStateData[state_name].totalContributions += total_contributions;
-          });
+          );
           return updatedStateData;
         });
       });
@@ -106,12 +130,55 @@ export default function HomePage() {
   const getColor = (stateName) => {
     const state = stateData[stateName];
     if (!state) return "#DDD";
-    return state.leadingParty === 'Joe Biden' ? "#ADD8E6" : "#FFB3B2";
+
+    if (showContributions) {
+      // Compare contributions between parties
+      const dem = state.contributions["Democratic"] || 0;
+      const rep = state.contributions["Republican"] || 0;
+      return dem > rep ? "#ADD8E6" : "#FFB3B2";
+    } else {
+      // Use existing popular vote logic
+      return state.leadingParty === "Joe Biden" ? "#ADD8E6" : "#FFB3B2";
+    }
   };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <div id="tooltip" style={{ position: 'absolute', backgroundColor: 'white', padding: '5px', border: '1px solid black' }}></div>
+      <Box
+        sx={{
+          mb: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showContributions}
+              onChange={(e) => setShowContributions(e.target.checked)}
+              color="primary"
+            />
+          }
+          label={
+            <Typography>
+              {showContributions
+                ? "Showing Campaign Contributions"
+                : "Showing Popular Vote"}
+            </Typography>
+          }
+        />
+      </Box>
+
+      <div
+        id="tooltip"
+        style={{
+          position: "absolute",
+          backgroundColor: "white",
+          padding: "5px",
+          border: "1px solid black",
+        }}
+      ></div>
       <ComposableMap projection="geoAlbersUsa">
         <Geographies geography={geoUrl}>
           {({ geographies }) =>
@@ -120,8 +187,10 @@ export default function HomePage() {
               console.log(geo.properties);
               const fillColor = getColor(stateName);
               const stateVotes = stateData[stateName]?.votes || {};
-              const stateContributions = stateData[stateName]?.contributions || {};
-              const totalContributions = stateData[stateName]?.totalContributions || 0;
+              const stateContributions =
+                stateData[stateName]?.contributions || {};
+              const totalContributions =
+                stateData[stateName]?.totalContributions || 0;
 
               return (
                 <Geography
@@ -140,10 +209,15 @@ export default function HomePage() {
                       .map(([candidate, votes]) => `${candidate}: ${votes}`)
                       .join("\n");
                     const contributionInfo = Object.entries(stateContributions)
-                      .map(([party, contributions]) => `${party}: $${contributions}`)
+                      .map(
+                        ([party, contributions]) =>
+                          `${party}: $${contributions}`
+                      )
                       .join("\n");
-                    
-                    document.querySelector("#tooltip").innerText = `${stateName}\nVotes:\n${voteInfo}\nContributions:\n${contributionInfo}\nTotal Contributions: $${totalContributions}`;
+
+                    document.querySelector(
+                      "#tooltip"
+                    ).innerText = `${stateName}\nVotes:\n${voteInfo}\nContributions:\n${contributionInfo}\nTotal Contributions: $${totalContributions}`;
                   }}
                   onMouseLeave={() => {
                     document.querySelector("#tooltip").innerText = "";
