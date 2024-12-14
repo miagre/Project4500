@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Select, Input, Radio, Space, Typography } from 'antd';
-import { config } from '../config';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -67,26 +66,48 @@ const InsightsPage = () => {
   }, [filterAmount, comparisonType, employerSortField, occupationSortField]);
 
   const fetchData = async () => {
-    let employerUrl = `${config.server_url}/all_employer_stats?sort_by=${employerSortField}`;
-    let occupationUrl = `${config.server_url}/all_occupation_stats?sort_by=${occupationSortField}`;
+    let employerUrl = `http://localhost:8080/all_employer_stats?sort_by=${employerSortField}`;
+    let occupationUrl = `http://localhost:8080/all_occupation_stats?sort_by=${occupationSortField}`;
 
     if (filterAmount) {
-      employerUrl = `${config.server_url}/filtered_employer_stats?amount=${filterAmount}&comparison=${comparisonType}`;
-      occupationUrl = `${config.server_url}/filtered_occupation_stats?amount=${filterAmount}&comparison=${comparisonType}`;
+      employerUrl = `http://localhost:8080/filtered_employer_stats?amount=${filterAmount}&comparison=${comparisonType}`;
+      occupationUrl = `http://localhost:8080/filtered_occupation_stats?amount=${filterAmount}&comparison=${comparisonType}`;
     }
 
-    const [employerRes, occupationRes] = await Promise.all([
-      fetch(employerUrl),
-      fetch(occupationUrl)
-    ]);
+    try {
+      const [employerRes, occupationRes] = await Promise.all([
+        fetch(employerUrl),
+        fetch(occupationUrl)
+      ]);
 
-    const [employerData, occupationData] = await Promise.all([
-      employerRes.json(),
-      occupationRes.json()
-    ]);
+      const [employerData, occupationData] = await Promise.all([
+        employerRes.json(),
+        occupationRes.json()
+      ]);
 
-    setEmployerData(employerData);
-    setOccupationData(occupationData);
+      setEmployerData(employerData);
+      setOccupationData(occupationData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setEmployerData([]);
+      setOccupationData([]);
+    }
+  };
+
+  const renderDetails = (type, selected) => {
+    if (!selected) return null;
+    const data = type === 'employer' 
+      ? employerData.find(e => e.employer === selected)
+      : occupationData.find(o => o.occupation === selected);
+
+    return data && (
+      <div style={{ marginTop: 16, padding: 16, border: '1px solid #eee' }}>
+        <Title level={4}>Details for {selected}</Title>
+        <p>Total Contributions: ${data.total_contributions.toLocaleString()}</p>
+        <p>Number of Contributors: {data.num_contributors}</p>
+        <p>Average Contribution: ${data.avg_contribution.toLocaleString()}</p>
+      </div>
+    );
   };
 
   return (
@@ -120,6 +141,7 @@ const InsightsPage = () => {
               <Option key={emp.employer} value={emp.employer}>{emp.employer}</Option>
             ))}
           </Select>
+          {renderDetails('employer', selectedEmployer)}
           <Table
             columns={columns}
             dataSource={employerData}
@@ -143,6 +165,7 @@ const InsightsPage = () => {
               <Option key={occ.occupation} value={occ.occupation}>{occ.occupation}</Option>
             ))}
           </Select>
+          {renderDetails('occupation', selectedOccupation)}
           <Table
             columns={occupationColumns}
             dataSource={occupationData}
